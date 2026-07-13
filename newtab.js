@@ -104,6 +104,7 @@ let settings = { ...DEFAULT_SETTINGS };
 let timeTimer = 0;
 let historyOpen = false;
 let bookmarks = [];
+let saveQueue = Promise.resolve();
 
 function getEngine(id) {
   return ENGINES.find((engine) => engine.id === id) || ENGINES[0];
@@ -128,7 +129,9 @@ function populateEngines() {
 
 function saveSettings(nextSettings = settings) {
   settings = { ...settings, ...nextSettings };
-  return storage.set({ settings });
+  const snapshot = { ...settings };
+  saveQueue = saveQueue.then(() => storage.set({ settings: snapshot }));
+  return saveQueue;
 }
 
 function setBackground() {
@@ -497,10 +500,14 @@ function bindEvents() {
     });
   });
 
-  elements.logoText.addEventListener("input", async () => {
+  const saveLogoText = async () => {
     await saveSettings({ logoText: elements.logoText.value.trim() || "PureTab" });
     renderBrand();
-  });
+  };
+
+  elements.logoText.addEventListener("input", saveLogoText);
+  elements.logoText.addEventListener("change", saveLogoText);
+  elements.logoText.addEventListener("blur", saveLogoText);
 
   elements.logoImageFile.addEventListener("change", async () => {
     const [file] = elements.logoImageFile.files;
