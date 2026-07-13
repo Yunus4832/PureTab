@@ -286,14 +286,14 @@ select {
   left: 0;
   z-index: 35;
   width: 100%;
-  max-height: min(58vh, 560px);
+  max-height: min(356px, max(196px, calc(100vh - 236px)));
+  overflow: hidden;
   padding: 4px 0 12px;
   background: var(--surface);
   border-top: 1px solid var(--line);
   border-radius: 0 0 28px 28px;
   box-shadow: 0 18px 34px rgba(32, 33, 36, 0.12);
   backdrop-filter: blur(18px);
-  overflow-y: auto;
 }
 
 .suggestion-item {
@@ -312,13 +312,21 @@ select {
 
 .history-list {
   display: grid;
+  min-width: 0;
+  max-width: 100%;
+  max-height: min(304px, max(152px, calc(100vh - 288px)));
+  overflow-x: hidden;
+  overflow-y: auto;
   padding-block: 6px;
 }
 
 .suggestion-item {
   width: 100%;
+  min-width: 0;
+  max-width: 100%;
   min-height: 34px;
   padding: 7px 24px 7px 20px;
+  overflow: hidden;
   color: var(--fg);
   font-size: 16px;
   text-align: left;
@@ -334,19 +342,40 @@ select {
 }
 
 .history-engine {
+  flex: 0 1 34%;
+  min-width: 0;
+  max-width: 34%;
+  overflow: hidden;
   color: var(--muted);
   font-size: 13px;
+  text-align: right;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .history-query {
   display: inline-flex;
+  flex: 1 1 auto;
   align-items: center;
   min-width: 0;
+  max-width: 66%;
+  overflow: hidden;
   gap: 12px;
+}
+
+.history-query > span:last-child {
+  display: block;
+  flex: 1 1 auto;
+  min-width: 0;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .suggestion-icon {
   display: inline-grid;
+  flex: 0 0 18px;
   width: 18px;
   height: 18px;
   color: var(--muted);

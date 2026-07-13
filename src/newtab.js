@@ -6,6 +6,8 @@ const ENGINES = [
   { id: "sogou", name: "搜狗", url: "https://www.sogou.com/web?query=%s", logo: "icons/search-engines/sogou.svg" }
 ];
 
+const MAX_SUGGESTIONS_PER_SOURCE = 8;
+
 const DEFAULT_SETTINGS = {
   engine: "google",
   logoMode: "text",
@@ -14,6 +16,7 @@ const DEFAULT_SETTINGS = {
   backgroundImage: "",
   theme: "system",
   showBookmarks: false,
+  showBrowserHistory: false,
   history: []
 };
 
@@ -70,6 +73,10 @@ function createStorageAdapter() {
 const storage = createStorageAdapter();
 const browserBookmarks = globalThis.browser?.bookmarks;
 const chromeBookmarks = globalThis.chrome?.bookmarks;
+const browserHistory = globalThis.browser?.history;
+const chromeHistory = globalThis.chrome?.history;
+const browserPermissions = globalThis.browser?.permissions;
+const chromePermissions = globalThis.chrome?.permissions;
 const $ = (selector) => document.querySelector(selector);
 
 const elements = {
@@ -82,6 +89,7 @@ const elements = {
   defaultEngine: $("#defaultEngine"),
   themeSelect: $("#themeSelect"),
   showBookmarks: $("#showBookmarks"),
+  showBrowserHistory: $("#showBrowserHistory"),
   settingsToggle: $("#settingsToggle"),
   settingsPanel: $("#settingsPanel"),
   closeSettings: $("#closeSettings"),
@@ -104,6 +112,9 @@ let settings = { ...DEFAULT_SETTINGS };
 let timeTimer = 0;
 let historyOpen = false;
 let bookmarks = [];
+let browserHistoryItems = [];
+let browserHistorySearchTimer = 0;
+let browserHistorySearchToken = 0;
 let saveQueue = Promise.resolve();
 
 function getStoredSettings() {
@@ -245,6 +256,76 @@ function getBookmarkTree() {
   return Promise.resolve([]);
 }
 
+function containsPermission(permission) {
+  const permissions = { permissions: [permission] };
+
+  if (browserPermissions?.contains) {
+    return browserPermissions.contains(permissions);
+  }
+
+  if (chromePermissions?.contains) {
+    return new Promise((resolve) => {
+      chromePermissions.contains(permissions, resolve);
+    });
+  }
+
+  return Promise.resolve(false);
+}
+
+function requestPermission(permission) {
+  const permissions = { permissions: [permission] };
+
+  if (browserPermissions?.request) {
+    return browserPermissions.request(permissions);
+  }
+
+  if (chromePermissions?.request) {
+    return new Promise((resolve) => {
+      chromePermissions.request(permissions, resolve);
+    });
+  }
+
+  return Promise.resolve(false);
+}
+
+function removePermission(permission) {
+  const permissions = { permissions: [permission] };
+
+  if (browserPermissions?.remove) {
+    return browserPermissions.remove(permissions);
+  }
+
+  if (chromePermissions?.remove) {
+    return new Promise((resolve) => {
+      chromePermissions.remove(permissions, resolve);
+    });
+  }
+
+  return Promise.resolve(false);
+}
+
+function searchBrowserHistory(query) {
+  if (browserHistory?.search) {
+    return browserHistory.search({
+      text: query,
+      maxResults: 8,
+      startTime: 0
+    });
+  }
+
+  if (chromeHistory?.search) {
+    return new Promise((resolve) => {
+      chromeHistory.search({
+        text: query,
+        maxResults: 8,
+        startTime: 0
+      }, resolve);
+    });
+  }
+
+  return Promise.resolve([]);
+}
+
 function flattenBookmarks(nodes, list = []) {
   for (const node of nodes || []) {
     if (node.url) {
@@ -257,6 +338,43 @@ function flattenBookmarks(nodes, list = []) {
   }
 
   return list;
+}
+
+function scheduleBrowserHistorySearch() {
+  clearTimeout(browserHistorySearchTimer);
+
+  if (!settings.showBrowserHistory) {
+    browserHistoryItems = [];
+    renderHistory();
+    return;
+  }
+
+  const query = elements.input.value.trim();
+  if (!query) {
+    browserHistoryItems = [];
+    renderHistory();
+    return;
+  }
+
+  const token = browserHistorySearchToken + 1;
+  browserHistorySearchToken = token;
+  browserHistorySearchTimer = setTimeout(async () => {
+    try {
+      const items = await searchBrowserHistory(query);
+      if (token !== browserHistorySearchToken) return;
+      browserHistoryItems = items
+        .filter((item) => item.url)
+        .map((item) => ({
+          title: item.title || item.url,
+          url: item.url
+        }));
+    } catch (error) {
+      console.error("Failed to search browser history", error);
+      browserHistoryItems = [];
+    }
+
+    renderHistory();
+  }, 120);
 }
 
 async function loadBookmarks() {
@@ -280,7 +398,7 @@ function renderHistory() {
   const query = elements.input.value.trim().toLowerCase();
   const visibleHistory = settings.history
     .filter((item) => !query || item.query.toLowerCase().includes(query))
-    .slice(0, 8);
+    .slice(0, MAX_SUGGESTIONS_PER_SOURCE);
   const visibleBookmarks = settings.showBookmarks
     ? bookmarks
       .filter((item) => {
@@ -288,12 +406,20 @@ function renderHistory() {
         const url = item.url.toLowerCase();
         return query ? title.includes(query) || url.includes(query) : true;
       })
-      .slice(0, 8)
+      .slice(0, MAX_SUGGESTIONS_PER_SOURCE)
+    : [];
+  const visibleBrowserHistory = settings.showBrowserHistory
+    ? browserHistoryItems.slice(0, MAX_SUGGESTIONS_PER_SOURCE)
     : [];
 
-  const shouldShow = historyOpen && (visibleHistory.length > 0 || visibleBookmarks.length > 0);
+  const shouldShow = historyOpen && (
+    visibleHistory.length > 0 ||
+    visibleBookmarks.length > 0 ||
+    visibleBrowserHistory.length > 0
+  );
   elements.historyPanel.hidden = !shouldShow;
   elements.form.classList.toggle("history-open", shouldShow);
+  elements.clearHistory.hidden = visibleHistory.length === 0;
   elements.historyList.innerHTML = "";
 
   for (const item of visibleHistory) {
@@ -332,10 +458,29 @@ function renderHistory() {
     `;
     elements.historyList.append(button);
   }
+
+  for (const item of visibleBrowserHistory) {
+    const button = document.createElement("button");
+    button.type = "button";
+    button.className = "suggestion-item";
+    button.dataset.type = "browser-history";
+    button.dataset.url = item.url;
+    button.innerHTML = `
+      <span class="history-query">
+        <span class="suggestion-icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24"><path d="M3 12a9 9 0 1 0 3-6.7" /><path d="M3 4v5h5" /><path d="M12 7v5l3 2" /></svg>
+        </span>
+        <span>${escapeHtml(item.title)}</span>
+      </span>
+      <span class="history-engine">${escapeHtml(getHostname(item.url))}</span>
+    `;
+    elements.historyList.append(button);
+  }
 }
 
 function openHistory() {
   historyOpen = true;
+  scheduleBrowserHistorySearch();
   renderHistory();
 }
 
@@ -360,6 +505,7 @@ function render() {
   elements.defaultEngine.value = settings.engine;
   elements.themeSelect.value = settings.theme;
   elements.showBookmarks.checked = settings.showBookmarks;
+  elements.showBrowserHistory.checked = settings.showBrowserHistory;
   elements.logoText.value = settings.logoText;
   elements.engineMenuButton.innerHTML = `<img src="${currentEngine.logo}" alt="" aria-hidden="true" />`;
   elements.engineMenuButton.title = currentEngine.name;
@@ -501,6 +647,22 @@ function bindEvents() {
     loadBookmarks();
   });
 
+  elements.showBrowserHistory.addEventListener("change", async () => {
+    if (elements.showBrowserHistory.checked) {
+      const granted = await requestPermission("history");
+      await saveSettings({ showBrowserHistory: granted });
+      if (!granted) {
+        browserHistoryItems = [];
+      }
+    } else {
+      await removePermission("history");
+      browserHistoryItems = [];
+      await saveSettings({ showBrowserHistory: false });
+    }
+    scheduleBrowserHistorySearch();
+    render();
+  });
+
   elements.settingsToggle.addEventListener("click", () => {
     elements.settingsPanel.hidden = false;
   });
@@ -571,7 +733,7 @@ function bindEvents() {
     const item = event.target.closest(".suggestion-item");
     if (!item) return;
     closeHistory();
-    if (item.dataset.type === "bookmark") {
+    if (item.dataset.type === "bookmark" || item.dataset.type === "browser-history") {
       window.location.href = item.dataset.url;
       return;
     }
@@ -630,6 +792,10 @@ async function init() {
   if ("backgroundImage" in legacySettings || "logoImage" in legacySettings) {
     await saveSettings();
     await saveAssets(assets);
+  }
+  if (settings.showBrowserHistory && !(await containsPermission("history"))) {
+    settings.showBrowserHistory = false;
+    await saveSettings({ showBrowserHistory: false });
   }
   bindEvents();
   render();

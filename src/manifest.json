@@ -2,13 +2,16 @@
   "manifest_version": 3,
   "name": "PureTab",
   "description": "A clean, customizable new tab page with search engine switching, custom visuals, history, and bookmark suggestions.",
-  "version": "0.2.2",
+  "version": "0.3.0",
   "chrome_url_overrides": {
     "newtab": "newtab.html"
   },
   "permissions": [
     "bookmarks",
     "storage"
+  ],
+  "optional_permissions": [
+    "history"
   ],
   "icons": {
     "16": "icons/icon-16.png",
