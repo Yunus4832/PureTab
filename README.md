@@ -10,7 +10,7 @@
 - 自定义搜索框上方 Logo：文字、图片或当前时间
 - 本地搜索历史记录，输入时以下拉建议显示
 - 可选显示浏览器书签建议
-- 无运行时依赖，构建脚本只负责打包发布文件
+- 无运行时依赖，构建脚本只负责生成商店提交包
 
 ## 权限说明
 
@@ -23,37 +23,11 @@
 
 ### Chrome / Edge
 
-Chrome / Edge 通过 GitHub Release 下载 ZIP 包，再使用浏览器自带的“打包扩展程序”生成本地自签名 CRX 安装：
-
-1. 从 [GitHub Releases](https://github.com/Yunus4832/PureTab/releases) 下载 `PureTab-*-chrome.zip`。
-2. 将 ZIP 解压到任意目录。
-3. 打开扩展管理页。
-   - Chrome：`chrome://extensions`
-   - Edge：`edge://extensions`
-4. 开启“开发者模式”。
-5. 点击“打包扩展程序”。
-6. “扩展程序根目录”选择第 2 步解压后的目录。
-7. 第一次打包时“私钥文件”留空，浏览器会生成 `.crx` 和 `.pem`。
-8. 妥善保存 `.pem`；后续更新同一个扩展时需要继续使用这个私钥文件。
-9. 将生成的 `.crx` 拖动到扩展管理页安装。
-
-Chrome / Edge 不会直接安装 ZIP 文件。ZIP 是 GitHub Release 提供的扩展包，需要先解压，再由浏览器打包成 CRX。
-CRX 安装完成后，原始解压目录可以删除；后续更新需要保留的是第 7 步生成的 `.pem` 私钥文件。
-
-如果只是本地开发，也可以直接选择“加载已解压的扩展程序”，并选择 `src/` 或解压后的目录。
+Chrome / Edge 用户请通过 Chrome Web Store 安装 PureTab。
 
 ### Firefox
 
-Firefox 用户请从 Mozilla Add-ons 安装 PureTab。Firefox 正式版需要使用经过 Mozilla 签名的扩展，因此不通过 GitHub Release 分发本地未签名 XPI。
-
-审核通过前，开发者可以用临时方式测试：
-
-1. 打开 `about:debugging#/runtime/this-firefox`。
-2. 点击“临时载入附加组件”。
-3. 选择 `dist/PureTab-*-firefox.xpi`，或选择源码目录中的 `src/manifest.json`。
-4. 打开一个新标签页。
-
-临时载入的附加组件会在 Firefox 重启后失效。
+Firefox 用户请通过 Mozilla Add-ons 安装 PureTab。
 
 ## 从源码加载
 
@@ -62,7 +36,7 @@ Firefox 用户请从 Mozilla Add-ons 安装 PureTab。Firefox 正式版需要使
 - Chrome / Edge：在扩展管理页选择“加载已解压的扩展程序”，选择 `src/` 目录。
 - Firefox：在 `about:debugging#/runtime/this-firefox` 中选择 `src/manifest.json`，重启后需要重新载入。
 
-## 构建发布包
+## 构建商店提交包
 
 需要本机有 Node.js。
 
@@ -71,7 +45,7 @@ npm run check
 npm run build
 ```
 
-构建产物会生成到 `dist/`：
+构建产物会生成到 `dist/`，用于提交到 Chrome Web Store 和 Mozilla Add-ons：
 
 - `dist/PureTab-*-chrome.zip`
 - `dist/PureTab-*-firefox.xpi`
@@ -84,7 +58,7 @@ npm run build
 - `src/newtab.css`：界面样式
 - `src/newtab.js`：设置、搜索、历史记录逻辑
 - `src/icons/`：扩展图标和搜索引擎图标
-- `scripts/build.mjs`：打包 Chrome ZIP 和 Firefox XPI
+- `scripts/build.mjs`：生成 Chrome Web Store 和 Mozilla Add-ons 提交包
 - `scripts/check.mjs`：校验扩展清单文件
 - `dist/`：构建产物，不提交到仓库
 
