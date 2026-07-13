@@ -19,47 +19,38 @@
 
 隐私说明见 [PRIVACY.md](PRIVACY.md)。
 
-## 下载
+## 安装
 
-从 [GitHub Releases](https://github.com/Yunus4832/PureTab/releases) 下载对应浏览器的发布包：
+### Chrome / Edge
 
-- Chrome / Edge：`PureTab-*-chrome.zip`
-- Firefox 临时测试：`PureTab-*-firefox.xpi`
+Chrome / Edge 可以使用浏览器自带的“打包扩展程序”生成本地自签名 CRX：
 
-> Firefox 正式版需要安装经过 Mozilla 签名的扩展。GitHub Release 中的 `PureTab-*-firefox.xpi` 是构建产物，适合临时测试；如果通过 `about:debugging` 加载，重启浏览器后会失效。
-
-## Chrome / Edge 手动安装
-
-1. 下载 `PureTab-*-chrome.zip`。
-2. 将 ZIP 解压到一个长期保留的目录，例如 `~/.local/share/puretab/chrome/`。
-3. 打开 Chrome 或 Edge 的扩展管理页。
+1. 运行 `npm run build`，或取得 `PureTab-*-chrome.zip`。
+2. 将 `PureTab-*-chrome.zip` 解压到一个长期保留的目录，例如 `~/.local/share/puretab/chrome/`。
+3. 打开扩展管理页。
    - Chrome：`chrome://extensions`
    - Edge：`edge://extensions`
 4. 开启“开发者模式”。
-5. 选择“加载已解压的扩展程序”。
-6. 选择第 2 步解压后的目录。
-7. 打开一个新标签页。
+5. 点击“打包扩展程序”。
+6. “扩展程序根目录”选择第 2 步解压后的目录。
+7. 第一次打包时“私钥文件”留空，浏览器会生成 `.crx` 和 `.pem`。
+8. 妥善保存 `.pem`；后续更新同一个扩展时需要继续使用这个私钥文件。
+9. 将生成的 `.crx` 拖动到扩展管理页安装。
 
-Chrome / Edge 不会直接加载 ZIP 文件。加载后请不要删除或移动解压目录，否则浏览器会找不到扩展文件。
+如果只是本地开发，也可以直接选择“加载已解压的扩展程序”，并选择 `src/` 或解压后的目录。
 
-## Firefox 临时安装
+### Firefox
+
+Firefox 用户请从 Mozilla Add-ons 安装 PureTab。Firefox 正式版需要使用经过 Mozilla 签名的扩展；本地未签名 XPI 只能用于临时测试。
+
+审核通过前，可以用临时方式测试：
 
 1. 打开 `about:debugging#/runtime/this-firefox`。
 2. 点击“临时载入附加组件”。
-3. 选择下载的 `PureTab-*-firefox.xpi`，或选择源码目录中的 `src/manifest.json`。
+3. 选择 `dist/PureTab-*-firefox.xpi`，或选择源码目录中的 `src/manifest.json`。
 4. 打开一个新标签页。
 
-注意：这种方式只适合开发和测试。Firefox 重启后会移除临时附加组件，需要重新载入。
-
-## Firefox 长期安装
-
-长期安装需要使用经过 Mozilla 签名的 XPI。可选方式：
-
-- 发布到 Mozilla Add-ons，再从扩展商店安装。
-- 在 Mozilla Add-ons 选择自分发签名，下载签名后的 XPI 自行分发。
-- 开发时使用 Firefox Developer Edition / Nightly / ESR，并自行配置允许未签名扩展。
-
-普通 Firefox 正式版不能长期安装未签名的本地 XPI。
+临时载入的附加组件会在 Firefox 重启后失效。
 
 ## 从源码加载
 
@@ -93,3 +84,7 @@ npm run build
 - `scripts/build.mjs`：打包 Chrome ZIP 和 Firefox XPI
 - `scripts/check.mjs`：校验扩展清单文件
 - `dist/`：构建产物，不提交到仓库
+
+## 许可证
+
+[MIT](LICENSE)
