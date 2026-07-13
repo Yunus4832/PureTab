@@ -344,6 +344,17 @@ function closeHistory() {
   renderHistory();
 }
 
+function getLogoTextValue() {
+  return elements.logoText.value.trim();
+}
+
+function persistLogoText() {
+  const logoText = getLogoTextValue();
+  settings.logoText = logoText;
+  renderBrand();
+  return saveSettings({ logoText });
+}
+
 function render() {
   const currentEngine = getEngine(settings.engine);
   elements.defaultEngine.value = settings.engine;
@@ -494,7 +505,8 @@ function bindEvents() {
     elements.settingsPanel.hidden = false;
   });
 
-  elements.closeSettings.addEventListener("click", () => {
+  elements.closeSettings.addEventListener("click", async () => {
+    await persistLogoText();
     elements.settingsPanel.hidden = true;
   });
 
@@ -524,14 +536,16 @@ function bindEvents() {
     });
   });
 
-  const saveLogoText = async () => {
-    await saveSettings({ logoText: elements.logoText.value.trim() });
-    renderBrand();
+  const handleLogoTextChange = (event) => {
+    if (event.target !== elements.logoText) return;
+    persistLogoText().catch((error) => {
+      console.error("Failed to save logo text", error);
+    });
   };
 
-  elements.logoText.addEventListener("input", saveLogoText);
-  elements.logoText.addEventListener("change", saveLogoText);
-  elements.logoText.addEventListener("blur", saveLogoText);
+  elements.settingsPanel.addEventListener("input", handleLogoTextChange);
+  elements.settingsPanel.addEventListener("change", handleLogoTextChange);
+  elements.settingsPanel.addEventListener("compositionend", handleLogoTextChange);
 
   elements.logoImageFile.addEventListener("change", async () => {
     const [file] = elements.logoImageFile.files;
@@ -571,6 +585,9 @@ function bindEvents() {
 
   window.addEventListener("keydown", (event) => {
     if (event.key === "Escape") {
+      persistLogoText().catch((error) => {
+        console.error("Failed to save logo text", error);
+      });
       elements.settingsPanel.hidden = true;
       elements.engineMenu.hidden = true;
       elements.engineMenuButton.setAttribute("aria-expanded", "false");
@@ -589,6 +606,12 @@ function bindEvents() {
 
     if (!elements.form.contains(event.target)) {
       closeHistory();
+    }
+  });
+
+  window.addEventListener("pagehide", () => {
+    if (document.activeElement === elements.logoText) {
+      persistLogoText().catch(() => {});
     }
   });
 }
