@@ -23,10 +23,10 @@
 
 ### Chrome / Edge
 
-Chrome / Edge 可以使用浏览器自带的“打包扩展程序”生成本地自签名 CRX：
+Chrome / Edge 通过 GitHub Release 下载 ZIP 包，再使用浏览器自带的“打包扩展程序”生成本地自签名 CRX 安装：
 
-1. 运行 `npm run build`，或取得 `PureTab-*-chrome.zip`。
-2. 将 `PureTab-*-chrome.zip` 解压到一个长期保留的目录，例如 `~/.local/share/puretab/chrome/`。
+1. 从 [GitHub Releases](https://github.com/Yunus4832/PureTab/releases) 下载 `PureTab-*-chrome.zip`。
+2. 将 ZIP 解压到一个长期保留的目录，例如 `~/.local/share/puretab/chrome/`。
 3. 打开扩展管理页。
    - Chrome：`chrome://extensions`
    - Edge：`edge://extensions`
@@ -37,13 +37,15 @@ Chrome / Edge 可以使用浏览器自带的“打包扩展程序”生成本地
 8. 妥善保存 `.pem`；后续更新同一个扩展时需要继续使用这个私钥文件。
 9. 将生成的 `.crx` 拖动到扩展管理页安装。
 
+Chrome / Edge 不会直接安装 ZIP 文件。ZIP 是 GitHub Release 提供的扩展包，需要先解压，再由浏览器打包成 CRX。
+
 如果只是本地开发，也可以直接选择“加载已解压的扩展程序”，并选择 `src/` 或解压后的目录。
 
 ### Firefox
 
-Firefox 用户请从 Mozilla Add-ons 安装 PureTab。Firefox 正式版需要使用经过 Mozilla 签名的扩展；本地未签名 XPI 只能用于临时测试。
+Firefox 用户请从 Mozilla Add-ons 安装 PureTab。Firefox 正式版需要使用经过 Mozilla 签名的扩展，因此不通过 GitHub Release 分发本地未签名 XPI。
 
-审核通过前，可以用临时方式测试：
+审核通过前，开发者可以用临时方式测试：
 
 1. 打开 `about:debugging#/runtime/this-firefox`。
 2. 点击“临时载入附加组件”。
