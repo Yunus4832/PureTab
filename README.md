@@ -73,5 +73,6 @@ npm run build
 - `src/newtab.css`：界面样式
 - `src/newtab.js`：设置、搜索、历史记录逻辑
 - `src/icons/`：扩展图标和搜索引擎图标
-- `scripts/build.py`：打包 Chrome ZIP 和 Firefox XPI
+- `scripts/build.mjs`：打包 Chrome ZIP 和 Firefox XPI
+- `scripts/check.mjs`：校验扩展清单文件
 - `dist/`：构建产物，不提交到仓库

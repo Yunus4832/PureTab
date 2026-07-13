@@ -3,7 +3,7 @@
   "version": "0.2.2",
   "private": true,
   "scripts": {
-    "build": "python3 scripts/build.py",
-    "check": "python3 -m json.tool src/manifest.json >/dev/null && node --check src/newtab.js"
+    "build": "node scripts/build.mjs",
+    "check": "node scripts/check.mjs && node --check src/newtab.js && node --check scripts/build.mjs && node --check scripts/check.mjs"
   }
 }

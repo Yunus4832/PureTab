@@ -627,10 +627,6 @@ async function init() {
   };
 
   settings = { ...DEFAULT_SETTINGS, ...legacySettings, ...assets };
-  if (settings.logoText === "Google") {
-    settings.logoText = "";
-    await saveSettings({ logoText: "" });
-  }
   if ("backgroundImage" in legacySettings || "logoImage" in legacySettings) {
     await saveSettings();
     await saveAssets(assets);
