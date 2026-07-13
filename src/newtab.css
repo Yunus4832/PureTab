@@ -635,6 +635,11 @@ select {
     background: rgba(29, 32, 36, 0.92);
   }
 
+  .icon-button:hover,
+  .icon-button:focus-visible {
+    background: rgba(47, 51, 56, 0.96);
+  }
+
   .engine-current,
   .engine-option {
     color: #f3f4f6;
@@ -735,6 +740,11 @@ body[data-theme="dark"] .engine-current,
 body[data-theme="dark"] .settings-panel,
 body[data-theme="dark"] .search-form:focus-within {
   background: rgba(29, 32, 36, 0.92);
+}
+
+body[data-theme="dark"] .icon-button:hover,
+body[data-theme="dark"] .icon-button:focus-visible {
+  background: rgba(47, 51, 56, 0.96);
 }
 
 body[data-theme="dark"] .engine-current,
