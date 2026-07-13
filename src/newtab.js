@@ -106,6 +106,23 @@ let historyOpen = false;
 let bookmarks = [];
 let saveQueue = Promise.resolve();
 
+function getStoredSettings() {
+  const {
+    backgroundImage,
+    logoImage,
+    ...storedSettings
+  } = settings;
+
+  return storedSettings;
+}
+
+function getStoredAssets() {
+  return {
+    backgroundImage: settings.backgroundImage,
+    logoImage: settings.logoImage
+  };
+}
+
 function getEngine(id) {
   return ENGINES.find((engine) => engine.id === id) || ENGINES[0];
 }
@@ -129,8 +146,15 @@ function populateEngines() {
 
 function saveSettings(nextSettings = settings) {
   settings = { ...settings, ...nextSettings };
-  const snapshot = { ...settings };
+  const snapshot = getStoredSettings();
   saveQueue = saveQueue.catch(() => {}).then(() => storage.set({ settings: snapshot }));
+  return saveQueue;
+}
+
+function saveAssets(nextAssets) {
+  settings = { ...settings, ...nextAssets };
+  const snapshot = getStoredAssets();
+  saveQueue = saveQueue.catch(() => {}).then(() => storage.set({ assets: snapshot }));
   return saveQueue;
 }
 
@@ -478,7 +502,7 @@ function bindEvents() {
     const [file] = elements.backgroundFile.files;
     if (!file) return;
     try {
-      await saveSettings({ backgroundImage: await resizeImageFile(file, 1920, 0.84, "image/jpeg") });
+      await saveAssets({ backgroundImage: await resizeImageFile(file, 1920, 0.84, "image/jpeg") });
       render();
     } catch (error) {
       console.error("Failed to save background image", error);
@@ -488,7 +512,7 @@ function bindEvents() {
   });
 
   elements.removeBackground.addEventListener("click", async () => {
-    await saveSettings({ backgroundImage: "" });
+    await saveAssets({ backgroundImage: "" });
     elements.backgroundFile.value = "";
     render();
   });
@@ -513,10 +537,8 @@ function bindEvents() {
     const [file] = elements.logoImageFile.files;
     if (!file) return;
     try {
-      await saveSettings({
-        logoMode: "image",
-        logoImage: await resizeImageFile(file, 720, 0.92, "image/png")
-      });
+      await saveSettings({ logoMode: "image" });
+      await saveAssets({ logoImage: await resizeImageFile(file, 720, 0.92, "image/png") });
       render();
     } catch (error) {
       console.error("Failed to save logo image", error);
@@ -526,7 +548,8 @@ function bindEvents() {
   });
 
   elements.removeLogoImage.addEventListener("click", async () => {
-    await saveSettings({ logoImage: "", logoMode: "text" });
+    await saveSettings({ logoMode: "text" });
+    await saveAssets({ logoImage: "" });
     render();
   });
 
@@ -573,10 +596,21 @@ function bindEvents() {
 async function init() {
   populateEngines();
   const stored = await storage.get("settings");
-  settings = { ...DEFAULT_SETTINGS, ...(stored.settings || {}) };
+  const storedAssets = await storage.get("assets");
+  const legacySettings = stored.settings || {};
+  const assets = storedAssets.assets || {
+    backgroundImage: legacySettings.backgroundImage || "",
+    logoImage: legacySettings.logoImage || ""
+  };
+
+  settings = { ...DEFAULT_SETTINGS, ...legacySettings, ...assets };
   if (settings.logoText === "Google") {
     settings.logoText = "";
     await saveSettings({ logoText: "" });
+  }
+  if ("backgroundImage" in legacySettings || "logoImage" in legacySettings) {
+    await saveSettings();
+    await saveAssets(assets);
   }
   bindEvents();
   render();
