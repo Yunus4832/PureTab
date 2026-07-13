@@ -10,7 +10,7 @@
 - 自定义搜索框上方 Logo：文字、图片或当前时间
 - 本地搜索历史记录，输入时以下拉建议显示
 - 可选显示浏览器书签建议
-- 无构建步骤，无外部依赖
+- 无运行时依赖，构建脚本只负责打包发布文件
 
 ## 权限说明
 
@@ -48,13 +48,30 @@
 
 如果你想从源码运行：
 
-- Chrome / Edge：在扩展管理页选择“加载已解压的扩展程序”，选择源码目录。
-- Firefox：在 `about:debugging#/runtime/this-firefox` 中选择源码目录里的 `manifest.json`。
+- Chrome / Edge：在扩展管理页选择“加载已解压的扩展程序”，选择 `src/` 目录。
+- Firefox：在 `about:debugging#/runtime/this-firefox` 中选择 `src/manifest.json`。
+
+## 构建发布包
+
+需要本机有 Python 3。
+
+```bash
+npm run check
+npm run build
+```
+
+构建产物会生成到 `dist/`：
+
+- `dist/PureTab-*-chrome.zip`
+- `dist/PureTab-*-firefox.xpi`
+- `dist/checksums.txt`
 
 ## 文件结构
 
-- `manifest.json`：浏览器扩展配置
-- `newtab.html`：新标签页结构
-- `newtab.css`：界面样式
-- `newtab.js`：设置、搜索、历史记录逻辑
-- `icons/`：扩展图标和搜索引擎图标
+- `src/manifest.json`：浏览器扩展配置
+- `src/newtab.html`：新标签页结构
+- `src/newtab.css`：界面样式
+- `src/newtab.js`：设置、搜索、历史记录逻辑
+- `src/icons/`：扩展图标和搜索引擎图标
+- `scripts/build.py`：打包 Chrome ZIP 和 Firefox XPI
+- `dist/`：构建产物，不提交到仓库

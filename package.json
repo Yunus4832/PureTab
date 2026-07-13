@@ -1,0 +1,9 @@
+{
+  "name": "puretab",
+  "version": "0.2.1",
+  "private": true,
+  "scripts": {
+    "build": "python3 scripts/build.py",
+    "check": "python3 -m json.tool src/manifest.json >/dev/null && node --check src/newtab.js"
+  }
+}

@@ -9,7 +9,7 @@ const ENGINES = [
 const DEFAULT_SETTINGS = {
   engine: "google",
   logoMode: "text",
-  logoText: "PureTab",
+  logoText: "",
   logoImage: "",
   backgroundImage: "",
   theme: "system",
@@ -130,7 +130,7 @@ function populateEngines() {
 function saveSettings(nextSettings = settings) {
   settings = { ...settings, ...nextSettings };
   const snapshot = { ...settings };
-  saveQueue = saveQueue.then(() => storage.set({ settings: snapshot }));
+  saveQueue = saveQueue.catch(() => {}).then(() => storage.set({ settings: snapshot }));
   return saveQueue;
 }
 
@@ -501,7 +501,7 @@ function bindEvents() {
   });
 
   const saveLogoText = async () => {
-    await saveSettings({ logoText: elements.logoText.value.trim() || "PureTab" });
+    await saveSettings({ logoText: elements.logoText.value.trim() });
     renderBrand();
   };
 
@@ -575,8 +575,8 @@ async function init() {
   const stored = await storage.get("settings");
   settings = { ...DEFAULT_SETTINGS, ...(stored.settings || {}) };
   if (settings.logoText === "Google") {
-    settings.logoText = "PureTab";
-    await saveSettings({ logoText: "PureTab" });
+    settings.logoText = "";
+    await saveSettings({ logoText: "" });
   }
   bindEvents();
   render();
