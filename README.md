@@ -24,36 +24,53 @@
 从 [GitHub Releases](https://github.com/Yunus4832/PureTab/releases) 下载对应浏览器的发布包：
 
 - Chrome / Edge：`PureTab-*-chrome.zip`
-- Firefox：`PureTab-*-firefox.xpi`
+- Firefox 临时测试：`PureTab-*-firefox.xpi`
+
+> Firefox 正式版需要安装经过 Mozilla 签名的扩展。GitHub Release 中的 `PureTab-*-firefox.xpi` 是构建产物，适合临时测试；如果通过 `about:debugging` 加载，重启浏览器后会失效。
 
 ## Chrome / Edge 手动安装
 
-1. 打开 Chrome 或 Edge 的扩展管理页。
-2. 开启“开发者模式”。
-3. 解压下载的 `PureTab-*-chrome.zip`。
-4. 选择“加载已解压的扩展程序”。
-5. 选择解压后的目录。
-6. 打开一个新标签页。
+1. 下载 `PureTab-*-chrome.zip`。
+2. 将 ZIP 解压到一个长期保留的目录，例如 `~/.local/share/puretab/chrome/`。
+3. 打开 Chrome 或 Edge 的扩展管理页。
+   - Chrome：`chrome://extensions`
+   - Edge：`edge://extensions`
+4. 开启“开发者模式”。
+5. 选择“加载已解压的扩展程序”。
+6. 选择第 2 步解压后的目录。
+7. 打开一个新标签页。
 
-## Firefox 手动安装
+Chrome / Edge 不会直接加载 ZIP 文件。加载后请不要删除或移动解压目录，否则浏览器会找不到扩展文件。
+
+## Firefox 临时安装
 
 1. 打开 `about:debugging#/runtime/this-firefox`。
 2. 点击“临时载入附加组件”。
-3. 选择下载的 `PureTab-*-firefox.xpi`。
+3. 选择下载的 `PureTab-*-firefox.xpi`，或选择源码目录中的 `src/manifest.json`。
 4. 打开一个新标签页。
 
-注意：Firefox 通过 `about:debugging` 安装的是临时附加组件，重启浏览器后需要重新载入。
+注意：这种方式只适合开发和测试。Firefox 重启后会移除临时附加组件，需要重新载入。
+
+## Firefox 长期安装
+
+长期安装需要使用经过 Mozilla 签名的 XPI。可选方式：
+
+- 发布到 Mozilla Add-ons，再从扩展商店安装。
+- 在 Mozilla Add-ons 选择自分发签名，下载签名后的 XPI 自行分发。
+- 开发时使用 Firefox Developer Edition / Nightly / ESR，并自行配置允许未签名扩展。
+
+普通 Firefox 正式版不能长期安装未签名的本地 XPI。
 
 ## 从源码加载
 
 如果你想从源码运行：
 
 - Chrome / Edge：在扩展管理页选择“加载已解压的扩展程序”，选择 `src/` 目录。
-- Firefox：在 `about:debugging#/runtime/this-firefox` 中选择 `src/manifest.json`。
+- Firefox：在 `about:debugging#/runtime/this-firefox` 中选择 `src/manifest.json`，重启后需要重新载入。
 
 ## 构建发布包
 
-需要本机有 Python 3。
+需要本机有 Node.js。
 
 ```bash
 npm run check
