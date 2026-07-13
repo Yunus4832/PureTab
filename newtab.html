@@ -1,0 +1,116 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>PureTab</title>
+    <link rel="stylesheet" href="newtab.css" />
+  </head>
+  <body>
+    <main class="page-shell">
+      <section class="search-area" aria-label="搜索">
+        <div class="top-actions">
+          <button class="icon-button" id="settingsToggle" type="button" aria-label="打开设置" title="设置">
+            <svg aria-hidden="true" viewBox="0 0 24 24">
+              <path d="M12 15.5A3.5 3.5 0 1 0 12 8a3.5 3.5 0 0 0 0 7.5Z" />
+              <path d="M19.4 15a1.8 1.8 0 0 0 .36 1.98l.05.05a2.18 2.18 0 0 1-3.08 3.08l-.05-.05a1.8 1.8 0 0 0-1.98-.36 1.8 1.8 0 0 0-1.1 1.66v.14a2.18 2.18 0 0 1-4.36 0v-.08A1.8 1.8 0 0 0 8.12 19.7a1.8 1.8 0 0 0-1.98.36l-.05.05a2.18 2.18 0 1 1-3.08-3.08l.05-.05A1.8 1.8 0 0 0 3.42 15a1.8 1.8 0 0 0-1.66-1.1h-.08a2.18 2.18 0 0 1 0-4.36h.08a1.8 1.8 0 0 0 1.66-1.1 1.8 1.8 0 0 0-.36-1.98l-.05-.05a2.18 2.18 0 1 1 3.08-3.08l.05.05a1.8 1.8 0 0 0 1.98.36h.02A1.8 1.8 0 0 0 9.24 2V1.9a2.18 2.18 0 0 1 4.36 0V2a1.8 1.8 0 0 0 1.1 1.66 1.8 1.8 0 0 0 1.98-.36l.05-.05a2.18 2.18 0 1 1 3.08 3.08l-.05.05a1.8 1.8 0 0 0-.36 1.98v.02a1.8 1.8 0 0 0 1.66 1.1h.14a2.18 2.18 0 0 1 0 4.36h-.08A1.8 1.8 0 0 0 19.4 15Z" />
+            </svg>
+          </button>
+        </div>
+
+        <div class="brand" id="brand" aria-live="polite"></div>
+
+        <form class="search-form" id="searchForm" autocomplete="off">
+          <div class="engine-picker" id="enginePicker">
+            <button class="engine-current" id="engineMenuButton" type="button" aria-label="选择搜索引擎" aria-expanded="false"></button>
+            <div class="engine-menu" id="engineMenu" role="menu" aria-label="搜索引擎" hidden></div>
+          </div>
+          <input id="searchInput" type="search" name="q" aria-label="搜索" spellcheck="false" autofocus />
+          <button class="search-button" type="submit" aria-label="搜索" title="搜索">
+            <svg aria-hidden="true" viewBox="0 0 24 24">
+              <path d="m21 21-4.35-4.35" />
+              <circle cx="11" cy="11" r="7" />
+            </svg>
+          </button>
+
+          <div class="history-panel" id="historyPanel" hidden>
+            <div class="history-list" id="historyList"></div>
+            <div class="history-actions">
+              <button id="clearHistory" type="button">清空历史记录</button>
+            </div>
+          </div>
+        </form>
+      </section>
+    </main>
+
+    <aside class="settings-panel" id="settingsPanel" aria-label="设置" hidden>
+      <div class="settings-header">
+        <strong>设置</strong>
+        <button class="icon-button" id="closeSettings" type="button" aria-label="关闭设置" title="关闭">
+          <svg aria-hidden="true" viewBox="0 0 24 24">
+            <path d="M18 6 6 18" />
+            <path d="m6 6 12 12" />
+          </svg>
+        </button>
+      </div>
+
+      <label class="field">
+        <span>默认搜索引擎</span>
+        <span class="select-control">
+          <select id="defaultEngine"></select>
+        </span>
+      </label>
+
+      <label class="field">
+        <span>主题</span>
+        <span class="select-control">
+          <select id="themeSelect">
+            <option value="system">跟随系统</option>
+            <option value="light">浅色</option>
+            <option value="dark">深色</option>
+          </select>
+        </span>
+      </label>
+
+      <label class="toggle-field">
+        <input id="showBookmarks" type="checkbox" />
+        <span>在搜索建议中显示书签</span>
+      </label>
+
+      <div class="field">
+        <span>背景图片</span>
+        <label class="file-control">
+          <input id="backgroundFile" type="file" accept="image/*" />
+          <span>选择图片</span>
+        </label>
+        <small id="backgroundStatus">未设置</small>
+      </div>
+      <div class="background-preview" id="backgroundPreview" aria-label="当前背景图" hidden></div>
+      <button class="plain-button" id="removeBackground" type="button">移除背景</button>
+
+      <fieldset class="field-group">
+        <legend>Logo 类型</legend>
+        <label><input type="radio" name="logoMode" value="text" /> 文字</label>
+        <label><input type="radio" name="logoMode" value="image" /> 图片</label>
+        <label><input type="radio" name="logoMode" value="time" /> 时间</label>
+      </fieldset>
+
+      <label class="field" id="logoTextField">
+        <span>Logo 文字</span>
+        <input id="logoText" type="text" maxlength="24" placeholder="PureTab" />
+      </label>
+
+      <div class="field" id="logoImageField">
+        <span>Logo 图片</span>
+        <label class="file-control">
+          <input id="logoImageFile" type="file" accept="image/*" />
+          <span>选择图片</span>
+        </label>
+        <small id="logoImageStatus">未设置</small>
+      </div>
+      <button class="plain-button" id="removeLogoImage" type="button">移除 Logo 图片</button>
+    </aside>
+
+    <script src="newtab.js"></script>
+  </body>
+</html>
