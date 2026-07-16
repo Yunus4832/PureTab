@@ -1,4 +1,5 @@
 const ENGINES = [
+  { id: "browser-default", name: "默认", logo: "icons/icon-48.png" },
   { id: "google", name: "Google", url: "https://www.google.com/search?q=%s", logo: "icons/search-engines/google.svg" },
   { id: "bing", name: "Bing", url: "https://www.bing.com/search?q=%s", logo: "icons/search-engines/bing.svg" },
   { id: "duckduckgo", name: "DuckDuckGo", url: "https://duckduckgo.com/?q=%s", logo: "icons/search-engines/duckduckgo.svg" },
@@ -9,7 +10,6 @@ const ENGINES = [
 const MAX_SUGGESTIONS_PER_SOURCE = 8;
 
 const DEFAULT_SETTINGS = {
-  engine: "google",
   logoMode: "text",
   logoText: "",
   logoImage: "",
@@ -86,7 +86,6 @@ const elements = {
   enginePicker: $("#enginePicker"),
   engineMenuButton: $("#engineMenuButton"),
   engineMenu: $("#engineMenu"),
-  defaultEngine: $("#defaultEngine"),
   themeSelect: $("#themeSelect"),
   showBookmarks: $("#showBookmarks"),
   showBrowserHistory: $("#showBrowserHistory"),
@@ -109,6 +108,7 @@ const elements = {
 };
 
 let settings = { ...DEFAULT_SETTINGS };
+let selectedEngine = "browser-default";
 let timeTimer = 0;
 let historyOpen = false;
 let bookmarks = [];
@@ -121,6 +121,7 @@ function getStoredSettings() {
   const {
     backgroundImage,
     logoImage,
+    engine,
     ...storedSettings
   } = settings;
 
@@ -139,8 +140,6 @@ function getEngine(id) {
 }
 
 function populateEngines() {
-  const options = ENGINES.map((engine) => `<option value="${engine.id}">${engine.name}</option>`).join("");
-  elements.defaultEngine.innerHTML = options;
   elements.engineMenu.innerHTML = "";
 
   for (const engine of ENGINES) {
@@ -501,8 +500,7 @@ function persistLogoText() {
 }
 
 function render() {
-  const currentEngine = getEngine(settings.engine);
-  elements.defaultEngine.value = settings.engine;
+  const currentEngine = getEngine(selectedEngine);
   elements.themeSelect.value = settings.theme;
   elements.showBookmarks.checked = settings.showBookmarks;
   elements.showBrowserHistory.checked = settings.showBrowserHistory;
@@ -510,7 +508,7 @@ function render() {
   elements.engineMenuButton.innerHTML = `<img src="${currentEngine.logo}" alt="" aria-hidden="true" />`;
   elements.engineMenuButton.title = currentEngine.name;
   elements.engineMenu.querySelectorAll(".engine-option").forEach((button) => {
-    const isActive = button.dataset.engine === settings.engine;
+    const isActive = button.dataset.engine === selectedEngine;
     button.classList.toggle("active", isActive);
     button.setAttribute("aria-current", isActive ? "true" : "false");
   });
@@ -553,7 +551,7 @@ function getHostname(url) {
   }
 }
 
-async function search(query, engineId = settings.engine) {
+async function search(query, engineId = selectedEngine) {
   const trimmed = query.trim();
   if (!trimmed) return;
 
@@ -561,6 +559,15 @@ async function search(query, engineId = settings.engine) {
 
   if (isProbablyUrl(trimmed)) {
     window.location.href = normalizeUrl(trimmed);
+    return;
+  }
+
+  if (engineId === "browser-default") {
+    const searchApi = globalThis.browser?.search || globalThis.chrome?.search;
+    if (!searchApi?.query) {
+      throw new Error("Browser default search API is unavailable");
+    }
+    await searchApi.query({ text: trimmed, disposition: "CURRENT_TAB" });
     return;
   }
 
@@ -607,7 +614,9 @@ function bindEvents() {
   elements.form.addEventListener("submit", (event) => {
     event.preventDefault();
     closeHistory();
-    search(elements.input.value, settings.engine);
+    search(elements.input.value, selectedEngine).catch((error) => {
+      console.error("Failed to search", error);
+    });
   });
 
   elements.input.addEventListener("focus", openHistory);
@@ -619,21 +628,14 @@ function bindEvents() {
     elements.engineMenuButton.setAttribute("aria-expanded", String(willOpen));
   });
 
-  elements.engineMenu.addEventListener("click", async (event) => {
+  elements.engineMenu.addEventListener("click", (event) => {
     const button = event.target.closest(".engine-option");
     if (!button) return;
-    await saveSettings({ engine: button.dataset.engine });
+    selectedEngine = button.dataset.engine;
     elements.engineMenu.hidden = true;
     elements.engineMenuButton.setAttribute("aria-expanded", "false");
     render();
     elements.input.focus();
-  });
-
-  elements.defaultEngine.addEventListener("change", async () => {
-    await saveSettings({ engine: elements.defaultEngine.value });
-    elements.engineMenu.hidden = true;
-    elements.engineMenuButton.setAttribute("aria-expanded", "false");
-    render();
   });
 
   elements.themeSelect.addEventListener("change", async () => {
@@ -737,7 +739,9 @@ function bindEvents() {
       window.location.href = item.dataset.url;
       return;
     }
-    search(item.dataset.query, item.dataset.engine);
+    search(item.dataset.query, item.dataset.engine).catch((error) => {
+      console.error("Failed to repeat search", error);
+    });
   });
 
   elements.clearHistory.addEventListener("click", async () => {
@@ -789,7 +793,7 @@ async function init() {
   };
 
   settings = { ...DEFAULT_SETTINGS, ...legacySettings, ...assets };
-  if ("backgroundImage" in legacySettings || "logoImage" in legacySettings) {
+  if ("backgroundImage" in legacySettings || "logoImage" in legacySettings || "engine" in legacySettings) {
     await saveSettings();
     await saveAssets(assets);
   }
